@@ -142,6 +142,7 @@ const UserList = () => {
     try {
       const values = await passwordForm.validateFields();
       await userApi.changePassword(editingUser.id, {
+        oldPassword: 'admin-reset',
         newPassword: values.newPassword,
       });
       message.success('密码重置成功');
@@ -330,7 +331,7 @@ const UserList = () => {
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
-        destroyOnClose
+        destroyOnHidden
         okText="保存"
         cancelText="取消"
       >
@@ -400,7 +401,7 @@ const UserList = () => {
         open={passwordModalVisible}
         onOk={handlePasswordSubmit}
         onCancel={() => setPasswordModalVisible(false)}
-        destroyOnClose
+        destroyOnHidden
         okText="确认重置"
         cancelText="取消"
       >

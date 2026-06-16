@@ -172,6 +172,12 @@ export interface SearchResult {
   highlight?: string;
 }
 
+export interface SearchResultGroup {
+  caseCause: string;
+  items: SearchResult[];
+  count: number;
+}
+
 export interface ApiResponse<T = any> {
   code: number;
   message: string;
@@ -224,6 +230,7 @@ export interface CreateBorrowRequest {
   documentId: number;
   borrowType: BorrowType;
   borrowReason: string;
+  borrowDate?: string;
   dueDate?: string;
 }
 
@@ -270,6 +277,8 @@ export interface LogQueryParams {
   targetType?: string;
   startDate?: string;
   endDate?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface SearchParams {

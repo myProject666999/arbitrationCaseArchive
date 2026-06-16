@@ -115,8 +115,8 @@ const BorrowList = () => {
     try {
       const values = await approveForm.validateFields();
       await borrowApi.approveBorrow(selectedRecord.id, {
-        borrowDate: values.borrowDate.format('YYYY-MM-DD'),
-        dueDate: values.dueDate.format('YYYY-MM-DD'),
+        borrowDate: (values.borrowDate as any)?.format?.('YYYY-MM-DD'),
+        dueDate: (values.dueDate as any)?.format?.('YYYY-MM-DD'),
       });
       message.success('审批通过');
       setApproveModalVisible(false);
@@ -150,7 +150,7 @@ const BorrowList = () => {
     try {
       const values = await returnForm.validateFields();
       await borrowApi.returnBorrow(selectedRecord.id, {
-        returnDate: values.returnDate.format('YYYY-MM-DD'),
+        returnDate: (values.returnDate as any)?.format?.('YYYY-MM-DD'),
       });
       message.success('归还成功');
       setReturnModalVisible(false);
@@ -186,8 +186,8 @@ const BorrowList = () => {
   const openApproveModal = (record: BorrowRecord) => {
     setSelectedRecord(record);
     approveForm.setFieldsValue({
-      borrowDate: dayjs(),
-      dueDate: dayjs().add(7, 'day'),
+      borrowDate: dayjs() as any,
+      dueDate: dayjs().add(7, 'day') as any,
     });
     setApproveModalVisible(true);
   };
@@ -200,7 +200,7 @@ const BorrowList = () => {
   const openReturnModal = (record: BorrowRecord) => {
     setSelectedRecord(record);
     returnForm.setFieldsValue({
-      returnDate: dayjs(),
+      returnDate: dayjs() as any,
     });
     setReturnModalVisible(true);
   };
@@ -380,7 +380,7 @@ const BorrowList = () => {
         open={approveModalVisible}
         onOk={handleApprove}
         onCancel={() => setApproveModalVisible(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={approveForm} layout="vertical">
           <Form.Item
@@ -405,7 +405,7 @@ const BorrowList = () => {
         open={rejectModalVisible}
         onOk={handleReject}
         onCancel={() => setRejectModalVisible(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={rejectForm} layout="vertical">
           <Form.Item
@@ -423,7 +423,7 @@ const BorrowList = () => {
         open={returnModalVisible}
         onOk={handleReturn}
         onCancel={() => setReturnModalVisible(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={returnForm} layout="vertical">
           <Form.Item

@@ -108,8 +108,8 @@ const LogList = () => {
       let endTime: string | undefined;
       
       if (values.startTime && values.endTime) {
-        startTime = values.startTime.format('YYYY-MM-DD HH:mm:ss');
-        endTime = values.endTime.format('YYYY-MM-DD HH:mm:ss');
+        startTime = (values.startTime as any)?.format?.('YYYY-MM-DD HH:mm:ss');
+        endTime = (values.endTime as any)?.format?.('YYYY-MM-DD HH:mm:ss');
       }
       
       setPage(1);
@@ -355,7 +355,7 @@ const LogList = () => {
           </Button>,
         ]}
         width={700}
-        destroyOnClose
+        destroyOnHidden
       >
         {selectedLog && (
           <Descriptions bordered column={2} size="small">

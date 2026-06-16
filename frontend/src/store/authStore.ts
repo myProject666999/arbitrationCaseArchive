@@ -13,6 +13,9 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => boolean;
   hasRole: (roles: string[]) => boolean;
+  isAdmin: () => boolean;
+  isLibrarian: () => boolean;
+  isUser: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -67,6 +70,21 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         return roles.includes(user.role);
+      },
+
+      isAdmin: (): boolean => {
+        const { user } = get();
+        return user?.role === 'admin';
+      },
+
+      isLibrarian: (): boolean => {
+        const { user } = get();
+        return user?.role === 'librarian' || user?.role === 'admin';
+      },
+
+      isUser: (): boolean => {
+        const { user } = get();
+        return !!user;
       },
     }),
     {

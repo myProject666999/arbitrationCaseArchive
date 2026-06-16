@@ -1,92 +1,179 @@
-import React from 'react';
-import { Typography, Descriptions, Button, Space, Card, Table, Tag } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Typography, Descriptions, Button, Space, Card, Table, Tag, Modal, Form, Input, DatePicker, message, InputNumber, Popconfirm, Upload } from 'antd';
+import { ArrowLeftOutlined, EditOutlined, PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Volume, Document } from '../services/types';
+import type { Case, CaseFormData, Volume, Document } from '../services/types';
+import { caseApi, volumeApi, documentApi } from '../services/api';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
+const { TextArea } = Input;
 
 const CaseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [caseForm] = Form.useForm();
+  const [volumeForm] = Form.useForm();
 
-  const caseInfo = {
-    caseNumber: '(2024)仲字第001号',
-    caseTitle: '某科技公司合同纠纷案',
-    caseType: '合同纠纷',
-    caseCause: '买卖合同纠纷',
-    applicant: '某科技有限公司',
-    respondent: '某贸易有限公司',
-    caseDate: '2024-01-15',
-    summary: '本案系申请人与被申请人之间因买卖合同履行产生的争议。申请人诉称被申请人未按合同约定支付货款，请求裁决被申请人支付货款及违约金。',
-    isConfidential: false,
-    createdAt: '2024-01-15T10:00:00Z',
+  const [caseInfo, setCaseInfo] = useState<Case | null>(null);
+  const [volumes, setVolumes] = useState<Volume[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [editCaseModalVisible, setEditCaseModalVisible] = useState(false);
+  const [addVolumeModalVisible, setAddVolumeModalVisible] = useState(false);
+  const [editVolumeModalVisible, setEditVolumeModalVisible] = useState(false);
+  const [editingVolume, setEditingVolume] = useState<Volume | null>(null);
+
+  const fetchData = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const caseData = await caseApi.getCaseDetail(Number(id));
+      setCaseInfo(caseData);
+      const volumeData = await volumeApi.getVolumesByCase(Number(id));
+      setVolumes(volumeData);
+      const allDocs: Document[] = [];
+      for (const vol of volumeData) {
+        try {
+          const docs = await documentApi.getDocumentsByVolume(vol.id);
+          allDocs.push(...docs);
+        } catch {}
+      }
+      setDocuments(allDocs);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '获取案件详情失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const volumes: Volume[] = [
-    {
-      id: 1,
-      caseId: Number(id),
-      volumeNumber: 1,
-      volumeName: '证据卷一',
-      description: '包含合同、付款凭证等证据材料',
-      pageCount: 156,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: 2,
-      caseId: Number(id),
-      volumeNumber: 2,
-      volumeName: '证据卷二',
-      description: '包含庭审笔录、代理意见等材料',
-      pageCount: 89,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-  ];
+  useEffect(() => {
+    fetchData();
+  }, [id]);
 
-  const documents: Document[] = [
-    {
-      id: 1,
-      volumeId: 1,
-      documentName: '买卖合同.pdf',
-      documentType: 'PDF',
-      fileSize: 2048000,
-      pageNumber: 12,
-      scanDate: '2024-01-15',
-      ocrStatus: 'completed',
-      version: 1,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: 2,
-      volumeId: 1,
-      documentName: '付款凭证.pdf',
-      documentType: 'PDF',
-      fileSize: 1024000,
-      pageNumber: 8,
-      scanDate: '2024-01-15',
-      ocrStatus: 'completed',
-      version: 1,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: 3,
-      volumeId: 2,
-      documentName: '庭审笔录.pdf',
-      documentType: 'PDF',
-      fileSize: 512000,
-      pageNumber: 45,
-      scanDate: '2024-01-20',
-      ocrStatus: 'processing',
-      version: 1,
-      createdAt: '2024-01-20T10:00:00Z',
-      updatedAt: '2024-01-20T10:00:00Z',
-    },
-  ];
+  const handleEditCase = () => {
+    if (!caseInfo) return;
+    caseForm.setFieldsValue({
+      caseNumber: caseInfo.caseNumber,
+      caseTitle: caseInfo.caseTitle,
+      caseType: caseInfo.caseType,
+      caseCause: caseInfo.caseCause,
+      applicant: caseInfo.applicant,
+      respondent: caseInfo.respondent,
+      caseDate: caseInfo.caseDate ? dayjs(caseInfo.caseDate) : undefined,
+      summary: caseInfo.summary,
+      isConfidential: caseInfo.isConfidential,
+    });
+    setEditCaseModalVisible(true);
+  };
+
+  const handleEditCaseSubmit = async () => {
+    try {
+      const values = await caseForm.validateFields();
+      const formData: CaseFormData = {
+        ...values,
+        caseDate: values.caseDate ? values.caseDate.format('YYYY-MM-DD') : undefined,
+      };
+      await caseApi.updateCase(Number(id), formData);
+      message.success('案件信息更新成功');
+      setEditCaseModalVisible(false);
+      fetchData();
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'ValidateError') {
+        message.error(error.message || '更新失败');
+      }
+    }
+  };
+
+  const handleAddVolume = () => {
+    setEditingVolume(null);
+    volumeForm.resetFields();
+    volumeForm.setFieldsValue({
+      volumeNumber: volumes.length + 1,
+    });
+    setAddVolumeModalVisible(true);
+  };
+
+  const handleAddVolumeSubmit = async () => {
+    try {
+      const values = await volumeForm.validateFields();
+      await volumeApi.createVolume({
+        caseId: Number(id),
+        ...values,
+      });
+      message.success('卷册创建成功');
+      setAddVolumeModalVisible(false);
+      fetchData();
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'ValidateError') {
+        message.error(error.message || '创建失败');
+      }
+    }
+  };
+
+  const handleEditVolume = (volume: Volume) => {
+    setEditingVolume(volume);
+    volumeForm.setFieldsValue({
+      volumeNumber: volume.volumeNumber,
+      volumeName: volume.volumeName,
+      description: volume.description,
+    });
+    setEditVolumeModalVisible(true);
+  };
+
+  const handleEditVolumeSubmit = async () => {
+    if (!editingVolume) return;
+    try {
+      const values = await volumeForm.validateFields();
+      await volumeApi.updateVolume(editingVolume.id, values);
+      message.success('卷册更新成功');
+      setEditVolumeModalVisible(false);
+      fetchData();
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'ValidateError') {
+        message.error(error.message || '更新失败');
+      }
+    }
+  };
+
+  const handleDeleteVolume = async (volumeId: number) => {
+    try {
+      await volumeApi.deleteVolume(volumeId);
+      message.success('卷册删除成功');
+      fetchData();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '删除失败');
+    }
+  };
+
+  const handleDeleteDocument = async (docId: number) => {
+    try {
+      await documentApi.deleteDocument(docId);
+      message.success('文件删除成功');
+      fetchData();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '删除失败');
+    }
+  };
+
+  const handleUploadDocument = (volumeId: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png,.tif,.tiff';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        await documentApi.uploadDocument(file, volumeId);
+        message.success('文件上传成功');
+        fetchData();
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '上传失败');
+      }
+    };
+    input.click();
+  };
 
   const volumeColumns = [
     {
@@ -113,11 +200,22 @@ const CaseDetail: React.FC = () => {
       width: 100,
     },
     {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 180,
-      render: (text: string) => new Date(text).toLocaleString('zh-CN'),
+      title: '操作',
+      key: 'action',
+      width: 200,
+      render: (_: unknown, record: Volume) => (
+        <Space>
+          <Button type="link" size="small" icon={<UploadOutlined />} onClick={() => handleUploadDocument(record.id)}>
+            上传文件
+          </Button>
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEditVolume(record)}>
+            编辑
+          </Button>
+          <Popconfirm title="确定删除此卷册？" onConfirm={() => handleDeleteVolume(record.id)}>
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 
@@ -134,6 +232,7 @@ const CaseDetail: React.FC = () => {
       title: '所属卷册',
       dataIndex: 'volumeId',
       key: 'volumeId',
+      width: 150,
       render: (volumeId: number) => {
         const vol = volumes.find((v) => v.id === volumeId);
         return vol ? vol.volumeName : '-';
@@ -173,25 +272,25 @@ const CaseDetail: React.FC = () => {
       },
     },
     {
-      title: '扫描日期',
-      dataIndex: 'scanDate',
-      key: 'scanDate',
-      width: 120,
-    },
-    {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 100,
       render: (_: unknown, record: Document) => (
         <Space>
-          <Button type="link" onClick={() => navigate(`/documents/${record.id}`)}>
+          <Button type="link" size="small" onClick={() => navigate(`/documents/${record.id}`)}>
             查看
           </Button>
-          <Button type="link">借阅</Button>
+          <Popconfirm title="确定删除此文件？" onConfirm={() => handleDeleteDocument(record.id)}>
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
         </Space>
       ),
     },
   ];
+
+  if (!caseInfo) {
+    return <div style={{ padding: 24 }}>加载中...</div>;
+  }
 
   return (
     <div>
@@ -204,8 +303,8 @@ const CaseDetail: React.FC = () => {
             {caseInfo.caseNumber} - {caseInfo.caseTitle}
           </Title>
           <Space>
-            <Button icon={<PlusOutlined />}>新增卷册</Button>
-            <Button icon={<EditOutlined />} type="primary">
+            <Button icon={<PlusOutlined />} onClick={handleAddVolume}>新增卷册</Button>
+            <Button icon={<EditOutlined />} type="primary" onClick={handleEditCase}>
               编辑
             </Button>
           </Space>
@@ -225,9 +324,7 @@ const CaseDetail: React.FC = () => {
               {caseInfo.isConfidential ? '是' : '否'}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="创建时间">
-            {new Date(caseInfo.createdAt).toLocaleString('zh-CN')}
-          </Descriptions.Item>
+          <Descriptions.Item label="创建时间">{caseInfo.createdAt}</Descriptions.Item>
           <Descriptions.Item label="案情摘要" span={2}>
             {caseInfo.summary}
           </Descriptions.Item>
@@ -268,6 +365,73 @@ const CaseDetail: React.FC = () => {
           }}
         />
       </Card>
+
+      <Modal
+        title="编辑案件"
+        open={editCaseModalVisible}
+        onOk={handleEditCaseSubmit}
+        onCancel={() => setEditCaseModalVisible(false)}
+        width={700}
+        destroyOnHidden
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={caseForm} layout="vertical">
+          <Form.Item name="caseNumber" label="案件编号" rules={[{ required: true, message: '请输入案件编号' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="caseTitle" label="案件标题" rules={[{ required: true, message: '请输入案件标题' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="caseType" label="案件类型" rules={[{ required: true, message: '请输入案件类型' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="caseCause" label="案由" rules={[{ required: true, message: '请输入案由' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="applicant" label="申请人">
+            <Input />
+          </Form.Item>
+          <Form.Item name="respondent" label="被申请人">
+            <Input />
+          </Form.Item>
+          <Form.Item name="caseDate" label="立案日期">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="isConfidential" label="是否涉密" valuePropName="checked">
+            <Input type="checkbox" />
+          </Form.Item>
+          <Form.Item name="summary" label="案情摘要">
+            <TextArea rows={4} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingVolume ? '编辑卷册' : '新增卷册'}
+        open={addVolumeModalVisible || editVolumeModalVisible}
+        onOk={editingVolume ? handleEditVolumeSubmit : handleAddVolumeSubmit}
+        onCancel={() => {
+          setAddVolumeModalVisible(false);
+          setEditVolumeModalVisible(false);
+          setEditingVolume(null);
+        }}
+        destroyOnHidden
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={volumeForm} layout="vertical">
+          <Form.Item name="volumeNumber" label="卷册号" rules={[{ required: true, message: '请输入卷册号' }]}>
+            <InputNumber min={1} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="volumeName" label="卷册名称" rules={[{ required: true, message: '请输入卷册名称' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

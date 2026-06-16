@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons';
 import type { TreeDataNode } from 'antd';
 import dayjs from 'dayjs';
-import type { Document, OCRVersion, DesensitizationRules, DesensitizedVersion, DesensitizationResult } from '@/services/types';
+import type { Document, OcrVersion, DesensitizationRules, DesensitizedVersion, DesensitizationResult } from '@/services/types';
 import { documentApi, desensitizationApi, caseApi, volumeApi } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -61,6 +61,7 @@ const defaultRules: DesensitizationRules = {
   email: true,
   address: false,
   bankCard: false,
+  companyName: false,
 };
 
 const Desensitization = () => {
@@ -70,7 +71,7 @@ const Desensitization = () => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [ocrVersion, setOcrVersion] = useState<OCRVersion | null>(null);
+  const [ocrVersion, setOcrVersion] = useState<OcrVersion | null>(null);
   const [ocrText, setOcrText] = useState<string>('');
   const [previewResult, setPreviewResult] = useState<DesensitizationResult | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -292,10 +293,9 @@ const Desensitization = () => {
   const handleViewHistory = (item: DesensitizedVersion) => {
     setPreviewResult({
       originalText: ocrText,
-      desensitizedText: item.desensitizedText,
+      desensitizedText: item.desensitizedText || '',
       desensitizedCount: item.desensitizedCount,
-      rules: item.desensitizationRules as DesensitizationRules,
-    });
+    } as DesensitizationResult);
     setShowPreview(true);
   };
 
@@ -345,7 +345,6 @@ const Desensitization = () => {
               selectedKeys={selectedKeys}
               onExpand={handleTreeExpand}
               onSelect={handleTreeSelect}
-              loading={treeLoading}
               blockNode
               style={{ padding: '8px 0' }}
             />
@@ -433,7 +432,7 @@ const Desensitization = () => {
                   actions={[
                     <Switch
                       key="switch"
-                      checked={rules[item.key]}
+                      checked={!!rules[item.key]}
                       onChange={(checked) => handleRuleChange(item.key, checked)}
                     />,
                   ]}
@@ -512,7 +511,7 @@ const Desensitization = () => {
                             {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
                           </Text>
                           <div>
-                            {Object.entries(item.desensitizationRules)
+                            {Object.entries(item.desensitizationRules || {})
                               .filter(([, v]) => v)
                               .map(([k]) => {
                                 const rule = ruleItems.find(r => r.key === k);

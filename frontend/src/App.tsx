@@ -8,7 +8,6 @@ import CaseDetail from './pages/CaseDetail';
 import DocumentDetail from './pages/DocumentDetail';
 import SearchPage from './pages/Search';
 import BorrowList from './pages/Borrow/BorrowList';
-import BorrowApply from './pages/Borrow/BorrowApply';
 import Desensitization from './pages/Desensitization/Desensitization';
 import Annotations from './pages/Annotations';
 import UserList from './pages/User/UserList';
@@ -33,7 +32,6 @@ const App: React.FC = () => {
         <Route path="documents/:id" element={<DocumentDetail />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="borrow" element={<BorrowList />} />
-        <Route path="borrow/apply" element={<BorrowApply />} />
         <Route path="desensitization" element={<Desensitization />} />
         <Route path="annotations" element={<Annotations />} />
         <Route

@@ -210,6 +210,19 @@ export const documentApi = {
     return handleResponse(response);
   },
 
+  getLatestOCRVersion: async (documentId: number): Promise<OcrVersion> => {
+    const versions = await documentApi.getOcrVersions(documentId);
+    if (versions.length === 0) {
+      throw new Error('该文件尚无OCR版本');
+    }
+    return versions[versions.length - 1];
+  },
+
+  getOCRText: async (documentId: number): Promise<string> => {
+    const version = await documentApi.getLatestOCRVersion(documentId);
+    return version.ocrText || '';
+  },
+
   getOcrVersionDetail: async (ocrVersionId: number): Promise<OcrVersion> => {
     const response = await api.get<ApiResponse<OcrVersion>>(`/ocr/version/${ocrVersionId}`);
     return handleResponse(response);

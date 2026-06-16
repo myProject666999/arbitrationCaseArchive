@@ -73,8 +73,8 @@ const BorrowApply = ({ visible, onCancel, onSuccess }: BorrowApplyProps) => {
       loadCases();
       form.resetFields();
       form.setFieldsValue({
-        borrowDate: dayjs(),
-        dueDate: dayjs().add(7, 'day'),
+        borrowDate: dayjs() as any,
+        dueDate: dayjs().add(7, 'day') as any,
         borrowType: 'view',
       });
       setSelectedKeys([]);
@@ -182,8 +182,8 @@ const BorrowApply = ({ visible, onCancel, onSuccess }: BorrowApplyProps) => {
         documentId: values.documentId,
         borrowType: values.borrowType,
         borrowReason: values.borrowReason,
-        borrowDate: values.borrowDate.format('YYYY-MM-DD'),
-        dueDate: values.dueDate.format('YYYY-MM-DD'),
+        borrowDate: (values.borrowDate as any)?.format?.('YYYY-MM-DD'),
+        dueDate: (values.dueDate as any)?.format?.('YYYY-MM-DD'),
       });
       
       onSuccess();
@@ -210,7 +210,7 @@ const BorrowApply = ({ visible, onCancel, onSuccess }: BorrowApplyProps) => {
       onCancel={onCancel}
       confirmLoading={loading}
       width={900}
-      destroyOnClose
+      destroyOnHidden
       okText="提交申请"
       cancelText="取消"
     >
@@ -230,7 +230,6 @@ const BorrowApply = ({ visible, onCancel, onSuccess }: BorrowApplyProps) => {
               selectedKeys={selectedKeys}
               onExpand={handleTreeExpand}
               onSelect={handleTreeSelect}
-              loading={treeLoading}
               blockNode
             />
           </Card>
