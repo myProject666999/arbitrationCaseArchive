@@ -43,6 +43,8 @@ async function bootstrap() {
     },
   });
 
+  app.setGlobalPrefix('api');
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -61,14 +63,14 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.APP_PORT || 3000;
   const host = process.env.APP_HOST || '0.0.0.0';
 
   await app.listen(port, host);
   logger.log(`应用已启动: http://${host}:${port}`, 'Bootstrap');
-  logger.log(`API文档: http://${host}:${port}/api`, 'Bootstrap');
+  logger.log(`API文档: http://${host}:${port}/api/docs`, 'Bootstrap');
 
   const ocrTask = app.get(OcrTaskService);
   ocrTask.start();

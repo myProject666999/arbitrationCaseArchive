@@ -33,9 +33,9 @@ export const useAuthStore = create<AuthState>()(
           if (response.data.code !== 200) {
             throw new Error(response.data.message || '登录失败');
           }
-          const { accessToken, user } = response.data.data;
+          const { token, user } = response.data.data;
           set({
-            token: accessToken,
+            token,
             user,
             isAuthenticated: true,
             loading: false,
