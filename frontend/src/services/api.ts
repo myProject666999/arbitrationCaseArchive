@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { message } from 'antd';
+import { useAuthStore } from '../store/authStore';
 import type {
   User,
   LoginRequest,
@@ -34,8 +36,10 @@ const api = axios.create({
   timeout: 30000,
 });
 
+let isRedirecting = false;
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -46,10 +50,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (!isRedirecting) {
+        isRedirecting = true;
+        const authStore = useAuthStore.getState();
+        authStore.logout();
+        message.error(error.response?.data?.message || '登录已过期，请重新登录');
+        if (window.location.pathname !== '/login') {
+          const redirectUrl = `${window.location.origin}/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+          window.location.href = redirectUrl;
+        }
+        setTimeout(() => {
+          isRedirecting = false;
+        }, 2000);
       }
     }
     return Promise.reject(error);

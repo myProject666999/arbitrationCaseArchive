@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, LoginRequest, LoginResponse } from '../services/types';
-import axios from 'axios';
+import api from '../services/api';
 import { message } from 'antd';
 
 interface AuthState {
@@ -18,6 +18,14 @@ interface AuthState {
   isUser: () => boolean;
 }
 
+const STORAGE_KEY = 'auth-storage';
+
+const clearAuthStorage = () => {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -29,14 +37,16 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials: LoginRequest): Promise<boolean> => {
         try {
           set({ loading: true });
-          const response = await axios.post<{ code: number; message: string; data: LoginResponse }>(
-            '/api/auth/login',
+          const response = await api.post<{ code: number; message: string; data: LoginResponse }>(
+            '/auth/login',
             credentials
           );
           if (response.data.code !== 200) {
             throw new Error(response.data.message || '登录失败');
           }
           const { token, user } = response.data.data;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
           set({
             token,
             user,
@@ -53,6 +63,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        clearAuthStorage();
         set({
           user: null,
           token: null,

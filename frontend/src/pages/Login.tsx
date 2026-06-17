@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { Form, Input, Button, Card, Typography } from 'antd';
+import React, { useEffect, useRef } from 'react';
+import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
 const { Title } = Typography;
@@ -16,21 +16,34 @@ const Login: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login, isAuthenticated, loading } = useAuthStore();
+  const redirectedRef = useRef(false);
 
   const state = location.state as LocationState;
-  const from = state?.from?.pathname || '/';
+  const redirectFromState = state?.from?.pathname || '/';
+  const redirectFromQuery = searchParams.get('redirect') || '';
+  const from = redirectFromQuery || redirectFromState;
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
+    if (isAuthenticated && !redirectedRef.current) {
+      redirectedRef.current = true;
+      const safeRedirect = from && from.startsWith('/') && from !== '/login' ? from : '/';
+      navigate(safeRedirect, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
+
+  useEffect(() => {
+    if (redirectFromQuery && redirectFromQuery !== '/login') {
+      message.info('登录已过期，请重新登录');
+    }
+  }, [redirectFromQuery]);
 
   const onFinish = async (values: { username: string; password: string }) => {
     const success = await login(values);
     if (success) {
-      navigate(from, { replace: true });
+      const safeRedirect = from && from.startsWith('/') && from !== '/login' ? from : '/';
+      navigate(safeRedirect, { replace: true });
     }
   };
 
