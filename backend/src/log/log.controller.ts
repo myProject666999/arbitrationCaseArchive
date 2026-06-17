@@ -1,6 +1,6 @@
-import { Controller, Get, UseGuards, Query, Logger, ParseIntPipe, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { LogService, LogQueryParams } from './log.service';
+import { Controller, Get, UseGuards, Query, Logger, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { LogService } from './log.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -24,22 +24,22 @@ export class LogController {
   @ApiQuery({ name: 'page', required: false, description: '页码，默认1', example: 1 })
   @ApiQuery({ name: 'pageSize', required: false, description: '每页数量，默认10', example: 10 })
   async findAll(
-    @Query('userId', new ParseIntPipe({ optional: true })) userId?: number,
+    @Query('userId') userId?: string,
     @Query('operationType') operationType?: string,
     @Query('startTime') startTime?: string,
     @Query('endTime') endTime?: string,
-    @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
-    @Query('pageSize', new ParseIntPipe({ optional: true })) pageSize: number = 10,
+    @Query('page') page: string = '1',
+    @Query('pageSize') pageSize: string = '10',
   ) {
     this.logger.debug(`查询操作日志, userId: ${userId}, operationType: ${operationType}`);
 
-    const params: LogQueryParams = {
-      userId,
+    const params = {
+      userId: userId ? parseInt(userId, 10) : undefined,
       operationType,
       startTime,
       endTime,
-      page,
-      pageSize,
+      page: parseInt(page, 10),
+      pageSize: parseInt(pageSize, 10),
     };
 
     const result = await this.logService.findAll(params);

@@ -51,18 +51,18 @@ export class VolumeService {
     return savedVolume;
   }
 
-  async findAll(page: number = 1, pageSize: number = 10): Promise<{ list: Volume[]; total: number; page: number; pageSize: number }> {
+  async findAll(page: number = 1, pageSize: number = 10): Promise<{ items: Volume[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`分页查询卷册列表: page=${page}, pageSize=${pageSize}`);
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.volumeRepository.findAndCount({
+    const [items, total] = await this.volumeRepository.findAndCount({
       skip,
       take: pageSize,
       relations: ['caseItem', 'createdBy', 'documents'],
       order: { createdAt: 'DESC' },
     });
 
-    return { list, total, page, pageSize };
+    return { items, total, page, pageSize };
   }
 
   async findOne(id: number): Promise<Volume> {

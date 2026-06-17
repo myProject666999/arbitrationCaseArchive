@@ -44,19 +44,19 @@ export class UserService {
   async findAll(
     page: number = 1,
     pageSize: number = 10,
-  ): Promise<{ list: User[]; total: number; page: number; pageSize: number }> {
+  ): Promise<{ items: User[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`分页查询用户, 页码: ${page}, 每页数量: ${pageSize}`);
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.userRepository.findAndCount({
+    const [items, total] = await this.userRepository.findAndCount({
       skip,
       take: pageSize,
       select: ['id', 'username', 'realName', 'role', 'department', 'phone', 'isActive', 'createdAt', 'updatedAt'],
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条用户记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条用户记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 
   async findOne(id: number): Promise<User> {

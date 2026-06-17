@@ -204,7 +204,7 @@ export class BorrowService {
     status?: BorrowStatus,
     documentId?: number,
     applicantId?: number,
-  ): Promise<{ list: BorrowRecord[]; total: number; page: number; pageSize: number }> {
+  ): Promise<{ items: BorrowRecord[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`分页查询借阅记录, page: ${page}, pageSize: ${pageSize}, 用户: ${user.username}`);
 
     const where: any = {};
@@ -224,7 +224,7 @@ export class BorrowService {
     }
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.borrowRepository.findAndCount({
+    const [items, total] = await this.borrowRepository.findAndCount({
       where,
       skip,
       take: pageSize,
@@ -232,8 +232,8 @@ export class BorrowService {
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条借阅记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条借阅记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 
   async findOne(id: number, user?: User): Promise<BorrowRecord> {
@@ -262,7 +262,7 @@ export class BorrowService {
     page: number = 1,
     pageSize: number = 10,
     status?: BorrowStatus,
-  ): Promise<{ list: BorrowRecord[]; total: number; page: number; pageSize: number }> {
+  ): Promise<{ items: BorrowRecord[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`获取用户借阅记录, userId: ${userId}, page: ${page}, pageSize: ${pageSize}`);
 
     const where: any = { applicantId: userId };
@@ -271,7 +271,7 @@ export class BorrowService {
     }
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.borrowRepository.findAndCount({
+    const [items, total] = await this.borrowRepository.findAndCount({
       where,
       skip,
       take: pageSize,
@@ -279,18 +279,18 @@ export class BorrowService {
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条用户借阅记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条用户借阅记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 
   async getPendingApprovals(
     page: number = 1,
     pageSize: number = 10,
-  ): Promise<{ list: BorrowRecord[]; total: number; page: number; pageSize: number }> {
+  ): Promise<{ items: BorrowRecord[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`获取待审批列表, page: ${page}, pageSize: ${pageSize}`);
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.borrowRepository.findAndCount({
+    const [items, total] = await this.borrowRepository.findAndCount({
       where: { status: 'pending' },
       skip,
       take: pageSize,
@@ -298,8 +298,8 @@ export class BorrowService {
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条待审批记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条待审批记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 
   async checkOverdue(): Promise<void> {

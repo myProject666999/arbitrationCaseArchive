@@ -44,19 +44,19 @@ export class AnnotationService {
   async findAll(
     page: number = 1,
     pageSize: number = 10,
-  ): Promise<{ list: Annotation[]; total: number; page: number; pageSize: number }> {
+  ): Promise<{ items: Annotation[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`分页查询标注, 页码: ${page}, 每页数量: ${pageSize}`);
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.annotationRepository.findAndCount({
+    const [items, total] = await this.annotationRepository.findAndCount({
       skip,
       take: pageSize,
       relations: ['document', 'annotator', 'ocrVersion'],
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条标注记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条标注记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 
   async findByDocumentId(documentId: number): Promise<Annotation[]> {

@@ -93,7 +93,7 @@ export class CaseService {
     this.logger.debug(`查询到 ${total} 条案件记录`);
 
     return {
-      list,
+      items: list,
       total,
       page,
       pageSize,

@@ -1,4 +1,4 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { WinstonModule } from 'nest-winston';
@@ -6,7 +6,6 @@ import * as winston from 'winston';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { RolesGuard } from './common/guards/roles.guard';
 import { OcrTaskService } from './tasks/ocr.task';
 
 async function bootstrap() {
@@ -54,7 +53,6 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
-  app.useGlobalGuards(new RolesGuard(app.get(Reflector)));
 
   const config = new DocumentBuilder()
     .setTitle('仲裁案件电子卷宗归档系统')

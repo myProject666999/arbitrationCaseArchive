@@ -46,7 +46,7 @@ export class LogService {
   }
 
   async findAll(params: LogQueryParams): Promise<{
-    list: OperationLog[];
+    items: OperationLog[];
     total: number;
     page: number;
     pageSize: number;
@@ -76,7 +76,7 @@ export class LogService {
       );
     }
 
-    const [list, total] = await this.operationLogRepository.findAndCount({
+    const [items, total] = await this.operationLogRepository.findAndCount({
       where,
       skip,
       take: pageSize,
@@ -84,7 +84,7 @@ export class LogService {
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条日志记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条日志记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 }

@@ -47,19 +47,19 @@ export class DocumentService {
     return savedDocument;
   }
 
-  async findAll(page: number = 1, pageSize: number = 10): Promise<{ list: Document[]; total: number; page: number; pageSize: number }> {
+  async findAll(page: number = 1, pageSize: number = 10): Promise<{ items: Document[]; total: number; page: number; pageSize: number }> {
     this.logger.debug(`分页查询文件, 页码: ${page}, 每页数量: ${pageSize}`);
 
     const skip = (page - 1) * pageSize;
-    const [list, total] = await this.documentRepository.findAndCount({
+    const [items, total] = await this.documentRepository.findAndCount({
       skip,
       take: pageSize,
       relations: ['volume', 'createdBy'],
       order: { createdAt: 'DESC' },
     });
 
-    this.logger.debug(`查询到 ${list.length} 条文件记录, 总计: ${total}`);
-    return { list, total, page, pageSize };
+    this.logger.debug(`查询到 ${items.length} 条文件记录, 总计: ${total}`);
+    return { items, total, page, pageSize };
   }
 
   async findOne(id: number): Promise<Document> {
